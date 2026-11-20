@@ -259,6 +259,51 @@ aside p {
 .tip small {
   font-size: 9px;
 }
+.block-btn {
+  width: 100%;
+  background: #f3edfb;
+  color: #7852ce;
+  font-size: 11px;
+  margin: 6px 0;
+}
+.block-btn:hover {
+  background: #e7dcf8;
+}
+.stop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0;
+  font-size: 11px;
+}
+.stop-pos {
+  width: 38px;
+  color: #8a7c96;
+}
+.stop label {
+  margin: 0;
+  gap: 4px;
+}
+.stop input[type="number"] {
+  width: 52px;
+  padding: 5px;
+}
+.stop-del {
+  padding: 4px 7px;
+  margin-left: auto;
+}
+.stop-del:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.inline {
+  margin: 14px 0;
+}
+.hint {
+  font-size: 10px !important;
+  line-height: 1.5;
+  margin: 4px 0 10px;
+}
 @media (max-width: 1250px) {
   .stage {
     justify-content: flex-start;

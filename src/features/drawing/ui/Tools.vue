@@ -4,7 +4,7 @@ import { doc } from "../../../shared/document";
 <template>
   <nav>
     <button
-      v-for="(icon, t) in { select: '↖', pen: '✒', nodes: '◇' }"
+      v-for="(icon, t) in { select: '↖', pen: '✒', nodes: '◇', width: '⇌' }"
       :class="{ active: doc.tool === t }"
       @click="doc.tool = t"
       :data-testid="'tool-' + t"

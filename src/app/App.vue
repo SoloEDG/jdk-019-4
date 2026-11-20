@@ -3,7 +3,6 @@ import { computed, watch } from "vue";
 import { doc } from "../shared/document";
 import {
   Tools,
-  path,
   create,
   add,
   seed,
@@ -13,6 +12,7 @@ import {
   revision,
 } from "../features/drawing";
 import { NodeOverlay, coordinates, select } from "../features/nodes";
+import { WidthOverlay, renderSpec, addStopAt } from "../features/taper";
 import { Properties } from "../features/appearance";
 import { Layers, translateSelected } from "../features/layers";
 import { ExportBar, restore, save, storageStatus } from "../features/export";
@@ -22,7 +22,7 @@ doc.selected = doc.shapes.length
   ? [doc.shapes[Math.min(3, doc.shapes.length - 1)].id]
   : [];
 watch(() => doc.shapes, save, { deep: true });
-const paths = computed(() => doc.shapes.map(path));
+const specs = computed(() => doc.shapes.map(renderSpec));
 let drawing: Shape | undefined;
 watch(
   () => doc.tool,
@@ -36,9 +36,9 @@ watch(revision, () => {
 function down(e: PointerEvent) {
   const svg = e.currentTarget as SVGSVGElement;
   const p = coordinates(e, svg);
-  beginEdit();
   const id = (e.target as Element).getAttribute("data-shape");
   if (doc.tool === "pen") {
+    beginEdit();
     if (!drawing) drawing = create(p);
     add(drawing, p);
     const n = drawing.nodes.at(-1)!;
@@ -53,9 +53,19 @@ function down(e: PointerEvent) {
       () => window.removeEventListener("pointermove", f),
       { once: true },
     );
+  } else if (doc.tool === "width") {
+    const shape = id
+      ? doc.shapes.find((s) => s.id === id)
+      : doc.shapes.find((s) => doc.selected.includes(s.id));
+    if (shape) {
+      if (!doc.selected.includes(shape.id)) select(shape.id, e.shiftKey);
+      beginEdit();
+      addStopAt(shape, p);
+    }
   } else if (id) {
     select(id, e.shiftKey);
     if (doc.tool === "nodes") return;
+    beginEdit();
     let last = p;
     const f = (ev: PointerEvent) => {
       const q = coordinates(ev, svg);
@@ -82,7 +92,7 @@ window.addEventListener("keydown", (e) => {
   <header>
     <b class="brand">◈ forma <small>VECTOR STUDIO</small></b>
     <div>Bloom exploration <span> / Personal workspace</span></div>
-    <ExportBar :paths="paths" />
+    <ExportBar />
   </header>
   <div class="workspace">
     <div class="left">
@@ -117,16 +127,17 @@ window.addEventListener("keydown", (e) => {
         >
           <rect width="800" height="600" fill="#fffdfb" />
           <path
-            v-for="s in doc.shapes"
+            v-for="(s, i) in doc.shapes"
             :key="s.id"
             :data-shape="s.id"
-            :d="path(s)"
-            :fill="s.fill"
-            :stroke="s.stroke"
-            :stroke-width="s.width"
+            :d="specs[i].d"
+            :fill="specs[i].fill"
+            :stroke="specs[i].stroke"
+            :stroke-width="specs[i].strokeWidth"
             :opacity="s.opacity"
           />
-          <NodeOverlay />
+          <WidthOverlay />
+          <NodeOverlay v-if="doc.tool !== 'width'" />
         </svg>
       </div>
       <footer>
@@ -134,7 +145,9 @@ window.addEventListener("keydown", (e) => {
         ><span>{{
           doc.tool === "pen"
             ? "Click / drag to draw · Enter to finish"
-            : "Shift + click to select multiple · Drag to move"
+            : doc.tool === "width"
+              ? "Click the path to add a width stop · drag markers to shape"
+              : "Shift + click to select multiple · Drag to move"
         }}</span
         ><span>{{ doc.selected.length }} selected</span>
       </footer>

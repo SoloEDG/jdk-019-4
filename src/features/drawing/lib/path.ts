@@ -1,4 +1,6 @@
 import type { Shape } from "../../../shared/types";
+
+/** Centerline cubic path of a shape (always the editable original). */
 export function path(s: Shape) {
   if (!s.nodes.length) return "";
   let d = `M ${s.nodes[0].x} ${s.nodes[0].y}`;
